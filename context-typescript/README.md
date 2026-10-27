@@ -44,6 +44,7 @@ React Native CLI app for the User Authentication assignment. State is managed wi
 - On launch: load registry + session → **`isAuthReady`** gate → auto-navigate **Home** if session exists
 - **Login** saves session; **logout** calls `removeItem` on session (accounts remain for re-login)
 - **Signup** persists accounts so login still works after killing the app
+- Uses **`@react-native-async-storage/async-storage@2.x`** (v3 needs a full native rebuild). After adding/updating it, run **`cd ios && pod install`** then **`yarn ios`** (not only Metro reload).
 
 ## Prerequisites
 

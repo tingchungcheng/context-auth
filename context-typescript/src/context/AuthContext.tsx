@@ -44,6 +44,10 @@ export function AuthProvider({children}: {children: React.ReactNode}) {
         if (mounted && session) {
           setUser(session);
         }
+      } catch (error) {
+        if (__DEV__) {
+          console.warn('[AuthContext] AsyncStorage hydrate failed:', error);
+        }
       } finally {
         if (mounted) {
           setIsAuthReady(true);
