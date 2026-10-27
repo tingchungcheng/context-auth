@@ -1,12 +1,82 @@
-import React from 'react';
+import React, {useCallback, useEffect, useRef} from 'react';
 import {BottomTabBarProps} from '@react-navigation/bottom-tabs';
-import {Pressable, StyleSheet, Text, View} from 'react-native';
+import {
+  Animated,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {useAuth} from '../context/AuthContext';
 import {colors} from '../theme/colors';
 import {MainTabParamList} from '../navigation/types';
 
 export const FLOATING_TAB_BAR_HEIGHT = 56;
+
+type TabItemProps = {
+  label: string;
+  isFocused: boolean;
+  onPress: () => void;
+};
+
+function FloatingTabItem({label, isFocused, onPress}: TabItemProps) {
+  const scale = useRef(new Animated.Value(1)).current;
+
+  const springTo = useCallback(
+    (toValue: number, bounciness = 6) => {
+      Animated.spring(scale, {
+        toValue,
+        useNativeDriver: true,
+        speed: 24,
+        bounciness,
+      }).start();
+    },
+    [scale],
+  );
+
+  useEffect(() => {
+    if (isFocused) {
+      Animated.sequence([
+        Animated.spring(scale, {
+          toValue: 1.08,
+          useNativeDriver: true,
+          speed: 36,
+          bounciness: 10,
+        }),
+        Animated.spring(scale, {
+          toValue: 1,
+          useNativeDriver: true,
+          speed: 22,
+          bounciness: 6,
+        }),
+      ]).start();
+    }
+  }, [isFocused, scale]);
+
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityState={isFocused ? {selected: true} : {}}
+      accessibilityLabel={label}
+      onPress={onPress}
+      onPressIn={() => springTo(0.88, 4)}
+      onPressOut={() => springTo(1)}
+      style={styles.tabPressable}>
+      <Animated.View
+        style={[
+          styles.tab,
+          isFocused ? styles.tabActive : undefined,
+          {transform: [{scale}]},
+        ]}>
+        <Text
+          style={[styles.label, isFocused ? styles.labelActive : undefined]}>
+          {label}
+        </Text>
+      </Animated.View>
+    </Pressable>
+  );
+}
 
 export function FloatingTabBar({state, navigation}: BottomTabBarProps) {
   const {user} = useAuth();
@@ -42,18 +112,12 @@ export function FloatingTabBar({state, navigation}: BottomTabBarProps) {
           };
 
           return (
-            <Pressable
+            <FloatingTabItem
               key={route.key}
-              accessibilityRole="button"
-              accessibilityState={isFocused ? {selected: true} : {}}
-              accessibilityLabel={label}
+              label={label}
+              isFocused={isFocused}
               onPress={onPress}
-              style={[styles.tab, isFocused ? styles.tabActive : undefined]}>
-              <Text
-                style={[styles.label, isFocused ? styles.labelActive : undefined]}>
-                {label}
-              </Text>
-            </Pressable>
+            />
           );
         })}
       </View>
@@ -85,8 +149,10 @@ const styles = StyleSheet.create({
     shadowRadius: 16,
     elevation: 8,
   },
-  tab: {
+  tabPressable: {
     flex: 1,
+  },
+  tab: {
     paddingVertical: 12,
     borderRadius: 22,
     alignItems: 'center',
