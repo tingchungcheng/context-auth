@@ -1,0 +1,260 @@
+Context Auth (TypeScript) — How Navigation, Context API, and Authentication Work
+================================================================================
+
+This document describes the design of the demo app in context-typescript/.
+It matches the assignment flow: Login, Signup, Home, global auth state, and
+React Navigation.
+
+
+1. BIG PICTURE
+--------------
+
+The app keeps ONE copy of "who is logged in" at the top of the tree (Context).
+Screens read that state and call login / signup / logout.
+React Navigation switches between Login, Signup, and Home tabs.
+A custom floating bottom tab bar adds rules for guests vs signed-in users.
+
+Data flow (simplified):
+
+  User taps button on screen
+       |
+       v
+  Screen calls useAuth().login(...) or signup(...)
+       |
+       v
+  AuthContext validates input, talks to authStore (in-memory users)
+       |
+       v
+  On success: user state updates OR signup only registers (no auto login)
+       |
+       v
+  Screen navigates (e.g. Home) or shows toast / modal on error
+
+
+2. APP ENTRY AND PROVIDER TREE (App.tsx)
+----------------------------------------
+
+Outermost to innermost:
+
+  SafeAreaProvider          — safe area insets for notches / home indicator
+  AuthProvider              — global auth state (user, login, signup, logout)
+  ModalProvider               — error popup modals (milestone C)
+  ToastProvider               — short success messages (e.g. after signup)
+  NavigationContainer         — required root for React Navigation
+  RootNavigator               — currently renders MainTabs only
+
+Why AuthProvider wraps NavigationContainer:
+  Any screen AND the custom tab bar (FloatingTabBar) can call useAuth() without
+  prop drilling. The tab bar needs user to lock Login/Signup when signed in.
+
+Files:
+  App.tsx
+  src/context/AuthContext.tsx
+  src/context/ModalContext.tsx
+  src/context/ToastContext.tsx
+  src/navigation/RootNavigator.tsx
+
+
+3. REACT CONTEXT API — AuthContext
+----------------------------------
+
+Pattern:
+  - createContext() holds the "shape" of shared data
+  - AuthProvider component owns useState for user (AuthUser | null)
+  - Provider value = { user, login, signup, logout }
+  - useAuth() hook reads the context in any child component
+
+AuthUser type (src/types/auth.ts):
+  - name: string
+  - email: string
+
+AuthActionResult (returned by login / signup):
+  - success: boolean
+  - message?: string     — for modals
+  - field?: 'name' | 'email' | 'password' — which input to highlight
+
+login(email, password):
+  1. validateLoginForm() — email format, password min length (src/utils/validation.ts)
+  2. verifyCredentials() against in-memory store
+  3. If match: setUser({ name, email }), return { success: true }
+  4. If fail: return { success: false, message: '...' }
+
+signup(name, email, password):
+  1. validateSignupForm() — name, email, password rules
+  2. Reject if email already registered
+  3. registerUser() in authStore — does NOT setUser (user must log in manually)
+  4. return { success: true }
+
+logout():
+  - setUser(null)
+
+Important: Context stores SESSION state (current user). It does not persist
+across app restarts until milestone D (AsyncStorage).
+
+
+4. IN-MEMORY USER STORE (authStore)
+-----------------------------------
+
+File: src/services/authStore.ts
+
+  - users = Map<emailLowerCase, { name, email, password }>
+  - Lives in JavaScript memory only; cleared when the app process is killed
+  - NOT a real backend — demo / assignment only
+  - Passwords stored in plain text here (never do this in production)
+
+Functions:
+  registerUser(name, email, password)
+  verifyCredentials(email, password) -> StoredUser | undefined
+  emailAlreadyRegistered(email) -> boolean
+
+
+5. REACT NAVIGATION — STRUCTURE
+-------------------------------
+
+Library stack:
+  @react-navigation/native
+  @react-navigation/bottom-tabs
+  react-native-screens
+  react-native-safe-area-context
+
+Navigator hierarchy:
+
+  RootNavigator
+    └── MainTabs (createBottomTabNavigator)
+          ├── Login    -> LoginScreen
+          ├── Signup   -> SignupScreen
+          └── Home     -> HomeScreen
+
+Types: src/navigation/types.ts — MainTabParamList lists screen names and params
+(all undefined for this app).
+
+initialRouteName: "Login"
+
+Custom tab bar:
+  MainTabs sets tabBar={MainTabBar} which renders FloatingTabBar.
+  Default tab UI is replaced so we get the floating pill at the bottom.
+
+Screen components receive navigation props from React Navigation, e.g.:
+  navigation.navigate('Home')
+  useFocusEffect(...) when screen gains focus
+
+
+6. FLOATING TAB BAR — GUEST VS SIGNED IN
+------------------------------------------
+
+File: src/components/FloatingTabBar.tsx
+
+Always shows three tabs: Login | Signup | Home.
+
+When user is NULL (guest):
+  - Home tab press -> navigate to Login (cannot view Home without session)
+  - Login / Signup work normally
+
+When user is set (signed in):
+  - Home tab: active, navigates as usual
+  - Login / Signup: "locked" — tap gives a small animation but does NOT
+    navigate (user stays on Home)
+  - Login and Signup screens also use useFocusEffect: if user exists,
+    redirect to Home (safety if state ever desyncs)
+
+This is NOT two separate navigators (auth stack vs app stack). It is one tab
+navigator with conditional tab behavior — simpler for the assignment demo.
+
+
+7. SCREEN BEHAVIOURS
+--------------------
+
+LoginScreen (src/screens/LoginScreen.tsx):
+  - Form: email, password (with visibility toggle)
+  - Calls login(); on failure -> useModal() + red field border
+  - On success -> toast "Welcome back!", navigation.navigate('Home')
+  - If already signed in (focus) -> redirect Home
+
+SignupScreen (src/screens/SignupScreen.tsx):
+  - Form: name, email, password
+  - Calls signup(); on failure -> modal
+  - On success -> toast "Account created. Please sign in.",
+    clear password, navigate('Login') — no automatic login
+  - Secondary button "Go to Login" uses PrimaryButton variant="outline"
+  - If already signed in (focus) -> redirect Home
+
+HomeScreen (src/screens/HomeScreen.tsx):
+  - Requires user; if none on focus -> navigate Login
+  - Marketing-style UI + draggable carousel + account card + Logout
+  - Logout -> logout() + navigate Login
+
+
+8. VALIDATION AND FEEDBACK (MILESTONE C)
+----------------------------------------
+
+validation.ts:
+  - Email regex, required fields, password length >= 6
+
+ModalContext:
+  - showModal({ title, message }) for login/signup errors
+
+ToastContext:
+  - showToast(message) for non-blocking success hints
+
+Screens stay thin: they call context methods and handle UI reactions.
+
+
+9. KEY FILES QUICK MAP
+----------------------
+
+  App.tsx                          App root, providers
+  src/context/AuthContext.tsx      Global auth state
+  src/services/authStore.ts        In-memory user database
+  src/utils/validation.ts          Form rules
+  src/navigation/MainTabs.tsx      Tab navigator definition
+  src/navigation/RootNavigator.tsx Entry navigator
+  src/components/FloatingTabBar.tsx Custom bottom tabs + lock rules
+  src/screens/LoginScreen.tsx
+  src/screens/SignupScreen.tsx
+  src/screens/HomeScreen.tsx
+  src/components/PrimaryButton.tsx Primary / ghost / outline buttons
+  src/components/AuthTextField.tsx Inputs + password eye icons
+
+
+10. TYPICAL USER JOURNEYS
+-------------------------
+
+New user:
+  Signup tab -> fill form -> Signup
+    -> toast, go to Login tab (still guest)
+  Login tab -> credentials -> Home tab, user in context
+
+Returning user (same app session):
+  Login -> Home
+
+Signed-in user:
+  Bottom bar: Login/Signup visible but locked; only Home content matters
+  Logout -> user null -> Login tab
+
+Guest taps Home:
+  Redirected to Login tab
+
+
+11. WHAT IS NOT IMPLEMENTED YET (MILESTONE D)
+---------------------------------------------
+
+  - AsyncStorage (or similar) to persist user after app close
+  - On launch: read stored session, setUser, skip Login
+  - On logout: clear storage
+
+  - Real API / JWT / secure password hashing
+  - Separate auth stack vs app stack (optional refactor)
+
+
+12. HOW TO EXTEND FOR LEARNING
+------------------------------
+
+  - Add a fourth context value isLoading if you add network calls
+  - Split MainTabs into AuthTabs + AppTabs and switch RootNavigator when
+    user != null (classic pattern)
+  - Move authStore calls to fetch() and keep AuthContext API the same
+  - Persist user JSON in AsyncStorage inside login/logout and hydrate in
+    AuthProvider useEffect on mount
+
+================================================================================
+End of document. For run instructions see context-typescript/README.md.

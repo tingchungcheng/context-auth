@@ -2,6 +2,8 @@
 
 React Native CLI app for the User Authentication assignment. State is managed with React Context API.
 
+**Architecture notes (navigation, Context API, auth):** [`docs/architecture-auth-navigation-context.txt`](docs/architecture-auth-navigation-context.txt)
+
 ## Milestones
 
 | Milestone | Scope | Status |
