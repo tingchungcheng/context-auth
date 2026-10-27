@@ -51,3 +51,21 @@ Remote: `git@github.com:tingchungcheng/context-auth.git`
 - **D** — AsyncStorage session
 
 Each milestone is committed and pushed to `main` when complete.
+
+## Commit messages
+
+Use a single prefix and a short summary:
+
+| Prefix | When to use |
+|--------|-------------|
+| **Feature:** | New behavior, screens, milestones |
+| **Fix:** | Bug fixes and regressions |
+| **Misc:** | Docs, tooling, refactors, chores |
+
+Examples:
+
+```text
+Feature: milestone B home tab and guest redirect
+Fix: yarn install failing on Node 23
+Misc: add prepmodules and nvmrc
+```

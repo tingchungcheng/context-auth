@@ -74,3 +74,7 @@ yarn android
 ```
 
 npm works too: `npm install`, `npm start -- --reset-cache`, `npm run ios`.
+
+## Commits
+
+Follow the repo convention: **`Feature:`**, **`Fix:`**, or **`Misc:`** + summary (see root [README](../README.md#commit-messages)).
