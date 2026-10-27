@@ -25,6 +25,8 @@ React Native CLI app for the User Authentication assignment. State is managed wi
 - **Home** tab on the same floating bar: **Login | Signup | Home**
 - **Guest** (not signed in) tapping **Home** → **Login** tab
 - After **login** → **Home** with name and email; **Logout** returns to **Login**
+- While signed in, bottom nav shows **Home only** (Login/Signup hidden); auth tabs redirect to Home if focused
+- **Home** mock marketing UI: promo banner, typography hero, looping empty carousel, account card + logout
 
 ### Milestone C — Validation & modals
 

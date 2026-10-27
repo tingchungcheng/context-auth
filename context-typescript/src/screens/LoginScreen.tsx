@@ -1,4 +1,5 @@
-import React, {useState} from 'react';
+import React, {useCallback, useState} from 'react';
+import {useFocusEffect} from '@react-navigation/native';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -21,13 +22,21 @@ type Props = BottomTabScreenProps<MainTabParamList, 'Login'>;
 type FieldKey = 'email' | 'password';
 
 export function LoginScreen({navigation}: Props) {
-  const {login} = useAuth();
+  const {login, user} = useAuth();
   const {showToast} = useToast();
   const {showModal} = useModal();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fieldErrors, setFieldErrors] = useState<Partial<Record<FieldKey, boolean>>>(
     {},
+  );
+
+  useFocusEffect(
+    useCallback(() => {
+      if (user) {
+        navigation.navigate('Home');
+      }
+    }, [navigation, user]),
   );
 
   const clearFieldError = (field: FieldKey) => {
