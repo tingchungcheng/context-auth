@@ -1,0 +1,113 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# React Native 0.88 supports Node ^22.13, ^24.3, or >=26 — not Node 23.x.
+ensure_supported_node() {
+  local nvmrc="$ROOT/.nvmrc"
+  local current
+  current="$(node -v 2>/dev/null | sed 's/^v//')"
+
+  node_version_ok() {
+    local ver="$1"
+    [[ "$ver" == 22.* ]] && [[ "$(printf '%s\n' "22.13.0" "$ver" | sort -V | head -1)" == "22.13.0" ]] && return 0
+    [[ "$ver" == 24.* ]] && [[ "$(printf '%s\n' "24.3.0" "$ver" | sort -V | head -1)" == "24.3.0" ]] && return 0
+    [[ "$ver" == 26.* ]] || [[ "$ver" == 2[7-9].* ]] && return 0
+    return 1
+  }
+
+  if node_version_ok "$current"; then
+    echo "→ Node v$current (supported)"
+    return 0
+  fi
+
+  echo "→ Node v${current:-unknown} is not supported by React Native 0.88."
+  echo "  Use Node 22.13+, 24.3+, or 26+ (see .nvmrc)."
+
+  export NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
+  if [[ -s "$NVM_DIR/nvm.sh" ]]; then
+    # shellcheck disable=SC1091
+    . "$NVM_DIR/nvm.sh"
+    if [[ -f "$nvmrc" ]]; then
+      echo "→ switching with nvm ($(cat "$nvmrc"))"
+      nvm install
+      nvm use
+      echo "→ now using $(node -v)"
+      return 0
+    fi
+  fi
+
+  echo ""
+  echo "Install a supported Node version, then re-run ./prepmodules:"
+  echo "  nvm install    # from repo root (needs .nvmrc)"
+  echo "  nvm use"
+  exit 1
+}
+
+install_js_deps() {
+  local dir="$1"
+  local name="$2"
+
+  if [[ ! -f "$dir/package.json" ]]; then
+    echo "→ skip $name (no package.json)"
+    return 0
+  fi
+
+  if [[ -f "$dir/yarn.lock" ]] && command -v yarn >/dev/null 2>&1; then
+    echo "→ yarn install in $name"
+    (cd "$dir" && yarn install --frozen-lockfile 2>/dev/null || yarn install)
+    return 0
+  fi
+
+  if command -v yarn >/dev/null 2>&1; then
+    echo "→ yarn install in $name"
+    (cd "$dir" && yarn install)
+    return 0
+  fi
+
+  echo "→ npm install in $name (yarn not found)"
+  (cd "$dir" && npm install)
+}
+
+install_ios_pods() {
+  local dir="$1"
+  local name="$2"
+  local podfile="$dir/ios/Podfile"
+
+  if [[ "$(uname -s)" != "Darwin" ]]; then
+    echo "→ skip CocoaPods for $name (not macOS)"
+    return 0
+  fi
+
+  if [[ ! -f "$podfile" ]]; then
+    echo "→ skip CocoaPods for $name (no ios/Podfile)"
+    return 0
+  fi
+
+  if ! command -v pod >/dev/null 2>&1; then
+    echo "→ skip CocoaPods for $name (pod not installed; run: sudo gem install cocoapods)"
+    return 0
+  fi
+
+  echo "→ pod install in $name/ios"
+  (cd "$dir/ios" && pod install)
+}
+
+echo "Preparing demo dependencies under $ROOT"
+echo ""
+
+ensure_supported_node
+echo ""
+
+install_js_deps "$ROOT/context-typescript" "context-typescript"
+install_ios_pods "$ROOT/context-typescript" "context-typescript"
+
+install_js_deps "$ROOT/redux-javascript" "redux-javascript"
+install_ios_pods "$ROOT/redux-javascript" "redux-javascript"
+
+echo ""
+echo "Done. Start the TypeScript app (terminal 1):"
+echo "  cd context-typescript && yarn start --reset-cache"
+echo "Terminal 2:"
+echo "  cd context-typescript && yarn ios    # or: yarn android"

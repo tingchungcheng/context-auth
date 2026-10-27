@@ -7,16 +7,17 @@ import {
   Text,
   View,
 } from 'react-native';
-import {NativeStackScreenProps} from '@react-navigation/native-stack';
+import {BottomTabScreenProps} from '@react-navigation/bottom-tabs';
 import {AuthTextField} from '../components/AuthTextField';
+import {FLOATING_TAB_BAR_HEIGHT} from '../components/FloatingTabBar';
 import {PrimaryButton} from '../components/PrimaryButton';
 import {useAuth} from '../context/AuthContext';
 import {colors} from '../theme/colors';
-import {AuthStackParamList} from '../navigation/types';
+import {AuthTabParamList} from '../navigation/types';
 
-type Props = NativeStackScreenProps<AuthStackParamList, 'Signup'>;
+type Props = BottomTabScreenProps<AuthTabParamList, 'Signup'>;
 
-export function SignupScreen({navigation}: Props) {
+export function SignupScreen(_props: Props) {
   const {signup} = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -77,11 +78,6 @@ export function SignupScreen({navigation}: Props) {
         ) : null}
 
         <PrimaryButton label="Signup" onPress={handleSignup} style={styles.primaryAction} />
-        <PrimaryButton
-          label="Go to Login"
-          variant="ghost"
-          onPress={() => navigation.navigate('Login')}
-        />
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -95,7 +91,8 @@ const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
     paddingHorizontal: 24,
-    paddingVertical: 32,
+    paddingTop: 32,
+    paddingBottom: 32 + FLOATING_TAB_BAR_HEIGHT + 24,
     justifyContent: 'center',
   },
   header: {

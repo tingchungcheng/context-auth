@@ -1,10 +1,10 @@
 import React from 'react';
-import {AuthStack} from './AuthStack';
+import {AuthTabs} from './AuthTabs';
 
 /**
- * Milestone A: auth stack only (Login + Signup).
+ * Milestone A: auth tabs (Login + Signup) with floating bottom bar.
  * Milestone B will add an app stack (Home) when `user` is set.
  */
 export function RootNavigator() {
-  return <AuthStack />;
+  return <AuthTabs />;
 }

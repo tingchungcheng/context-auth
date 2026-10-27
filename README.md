@@ -11,6 +11,34 @@ User Authentication assignment implementations for React Native (CLI).
 
 Assignment spec: [`requirements.txt`](requirements.txt)
 
+## Node version
+
+React Native **0.88** does not support **Node 23**. Use **22.13+**, **24.3+**, or **26+**:
+
+```bash
+nvm install   # reads .nvmrc (22.13.0)
+nvm use
+node -v
+```
+
+## Install dependencies
+
+`node_modules` is not in git. After clone, from the repo root:
+
+```bash
+./prepmodules
+```
+
+This runs **`yarn install`** (or `npm install` if Yarn is not installed) for each app with a `package.json`, and `pod install` under `ios/` on macOS when CocoaPods is available.
+
+**Run the demo (Yarn):**
+
+```bash
+cd context-typescript
+yarn start --reset-cache   # terminal 1
+yarn ios                   # terminal 2 (or yarn android)
+```
+
 ## Repository
 
 Remote: `git@github.com:tingchungcheng/context-auth.git`
