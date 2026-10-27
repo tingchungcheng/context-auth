@@ -12,26 +12,41 @@ import {AuthTextField} from '../components/AuthTextField';
 import {FLOATING_TAB_BAR_HEIGHT} from '../components/FloatingTabBar';
 import {PrimaryButton} from '../components/PrimaryButton';
 import {useAuth} from '../context/AuthContext';
+import {useModal} from '../context/ModalContext';
 import {useToast} from '../context/ToastContext';
 import {colors} from '../theme/colors';
 import {MainTabParamList} from '../navigation/types';
 
 type Props = BottomTabScreenProps<MainTabParamList, 'Login'>;
+type FieldKey = 'email' | 'password';
 
 export function LoginScreen({navigation}: Props) {
   const {login} = useAuth();
   const {showToast} = useToast();
+  const {showModal} = useModal();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [formError, setFormError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Partial<Record<FieldKey, boolean>>>(
+    {},
+  );
+
+  const clearFieldError = (field: FieldKey) => {
+    setFieldErrors(prev => ({...prev, [field]: false}));
+  };
 
   const handleLogin = () => {
+    setFieldErrors({});
     const result = login(email, password);
     if (!result.success) {
-      setFormError(result.message ?? 'Unable to log in.');
+      if (result.field) {
+        setFieldErrors({[result.field]: true});
+      }
+      showModal({
+        title: 'Unable to log in',
+        message: result.message ?? 'Please check your details and try again.',
+      });
       return;
     }
-    setFormError(null);
     showToast('Welcome back!');
     navigation.navigate('Home');
   };
@@ -51,7 +66,11 @@ export function LoginScreen({navigation}: Props) {
         <AuthTextField
           label="Email"
           value={email}
-          onChangeText={setEmail}
+          onChangeText={text => {
+            clearFieldError('email');
+            setEmail(text);
+          }}
+          error={fieldErrors.email}
           autoCapitalize="none"
           autoCorrect={false}
           keyboardType="email-address"
@@ -61,17 +80,15 @@ export function LoginScreen({navigation}: Props) {
         <AuthTextField
           label="Password"
           value={password}
-          onChangeText={setPassword}
-          secureTextEntry
+          onChangeText={text => {
+            clearFieldError('password');
+            setPassword(text);
+          }}
+          error={fieldErrors.password}
+          showPasswordToggle
           textContentType="password"
           placeholder="Your password"
         />
-
-        {formError ? (
-          <View style={styles.bannerError}>
-            <Text style={styles.bannerErrorText}>{formError}</Text>
-          </View>
-        ) : null}
 
         <PrimaryButton label="Login" onPress={handleLogin} style={styles.primaryAction} />
       </ScrollView>
@@ -108,15 +125,5 @@ const styles = StyleSheet.create({
   primaryAction: {
     marginBottom: 12,
     marginTop: 8,
-  },
-  bannerError: {
-    backgroundColor: colors.errorBackground,
-    borderRadius: 10,
-    padding: 12,
-    marginBottom: 8,
-  },
-  bannerErrorText: {
-    color: colors.error,
-    fontSize: 14,
   },
 });

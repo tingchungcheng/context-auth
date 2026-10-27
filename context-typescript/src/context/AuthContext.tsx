@@ -11,6 +11,7 @@ import {
   verifyCredentials,
 } from '../services/authStore';
 import {AuthActionResult, AuthUser} from '../types/auth';
+import {validateLoginForm, validateSignupForm} from '../utils/validation';
 
 type AuthContextValue = {
   user: AuthUser | null;
@@ -25,16 +26,20 @@ export function AuthProvider({children}: {children: React.ReactNode}) {
   const [user, setUser] = useState<AuthUser | null>(null);
 
   const login = useCallback((email: string, password: string): AuthActionResult => {
+    const validation = validateLoginForm(email, password);
+    if (!validation.valid) {
+      return {success: false, message: validation.message, field: validation.field};
+    }
+
     const trimmedEmail = email.trim();
     const trimmedPassword = password.trim();
 
-    if (!trimmedEmail || !trimmedPassword) {
-      return {success: false, message: 'Email and password are required.'};
-    }
-
     const match = verifyCredentials(trimmedEmail, trimmedPassword);
     if (!match) {
-      return {success: false, message: 'Incorrect email or password.'};
+      return {
+        success: false,
+        message: 'Incorrect email or password.',
+      };
     }
 
     setUser({name: match.name, email: match.email});
@@ -43,18 +48,20 @@ export function AuthProvider({children}: {children: React.ReactNode}) {
 
   const signup = useCallback(
     (name: string, email: string, password: string): AuthActionResult => {
+      const validation = validateSignupForm(name, email, password);
+      if (!validation.valid) {
+        return {success: false, message: validation.message, field: validation.field};
+      }
+
       const trimmedName = name.trim();
       const trimmedEmail = email.trim();
       const trimmedPassword = password.trim();
-
-      if (!trimmedName || !trimmedEmail || !trimmedPassword) {
-        return {success: false, message: 'Name, email, and password are required.'};
-      }
 
       if (emailAlreadyRegistered(trimmedEmail)) {
         return {
           success: false,
           message: 'An account with this email already exists.',
+          field: 'email',
         };
       }
 

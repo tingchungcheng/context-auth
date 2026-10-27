@@ -6,4 +6,5 @@ export type AuthUser = {
 export type AuthActionResult = {
   success: boolean;
   message?: string;
+  field?: 'name' | 'email' | 'password';
 };

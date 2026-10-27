@@ -8,7 +8,7 @@ React Native CLI app for the User Authentication assignment. State is managed wi
 |-----------|--------|--------|
 | **A** | Login & Signup (email + password), AuthContext, floating bottom tabs | Done |
 | **B** | Home (name + email), logout, Home tab + guest → Login | Done |
-| **C** | Email/password validation rules, popup modals | Planned |
+| **C** | Email/password validation rules, popup modals | Done |
 | **D** | AsyncStorage session persistence | Planned |
 
 ### Milestone A — Auth screens & context
@@ -26,12 +26,13 @@ React Native CLI app for the User Authentication assignment. State is managed wi
 - **Guest** (not signed in) tapping **Home** → **Login** tab
 - After **login** → **Home** with name and email; **Logout** returns to **Login**
 
-### Milestone C — Validation & modals (planned)
+### Milestone C — Validation & modals
 
-- Login: invalid email/password format; wrong credentials
-- Signup: missing fields, invalid email, password length &lt; 6
-- Replace or supplement inline errors with **popup modals**
-- Optional: password visibility toggle (assignment bonus)
+- **Login**: invalid email format, password rules (required, min 6 chars), wrong credentials → **modal**
+- **Signup**: missing name/email/password, invalid email, password &lt; 6, duplicate email → **modal**
+- Invalid fields get a **red border**; message is shown in the popup (not inline banners)
+- **Password visibility toggle** (Feather eye / eye-off icons) on Login and Signup
+- Validators live in `src/utils/validation.ts`; modals via `ModalContext`
 
 ### Milestone D — Persist session (planned)
 
