@@ -1,7 +1,8 @@
-export type AuthTabParamList = {
+export type MainTabParamList = {
   Login: undefined;
   Signup: undefined;
+  Home: undefined;
 };
 
-/** @deprecated Use AuthTabParamList — kept until app stack lands in milestone B */
-export type AuthStackParamList = AuthTabParamList;
+/** @deprecated Use MainTabParamList */
+export type AuthTabParamList = MainTabParamList;

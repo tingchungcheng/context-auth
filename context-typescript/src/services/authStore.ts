@@ -1,12 +1,21 @@
 type StoredUser = {
+  name: string;
   email: string;
   password: string;
 };
 
 const users = new Map<string, StoredUser>();
 
-export function registerUser(email: string, password: string): void {
-  users.set(email.toLowerCase(), {email: email.toLowerCase(), password});
+export function registerUser(
+  name: string,
+  email: string,
+  password: string,
+): void {
+  users.set(email.toLowerCase(), {
+    name: name.trim(),
+    email: email.toLowerCase(),
+    password,
+  });
 }
 
 export function findUser(email: string): StoredUser | undefined {

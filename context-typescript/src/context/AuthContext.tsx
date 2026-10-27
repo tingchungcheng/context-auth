@@ -15,7 +15,7 @@ import {AuthActionResult, AuthUser} from '../types/auth';
 type AuthContextValue = {
   user: AuthUser | null;
   login: (email: string, password: string) => AuthActionResult;
-  signup: (email: string, password: string) => AuthActionResult;
+  signup: (name: string, email: string, password: string) => AuthActionResult;
   logout: () => void;
 };
 
@@ -37,17 +37,18 @@ export function AuthProvider({children}: {children: React.ReactNode}) {
       return {success: false, message: 'Incorrect email or password.'};
     }
 
-    setUser({email: match.email});
+    setUser({name: match.name, email: match.email});
     return {success: true};
   }, []);
 
   const signup = useCallback(
-    (email: string, password: string): AuthActionResult => {
+    (name: string, email: string, password: string): AuthActionResult => {
+      const trimmedName = name.trim();
       const trimmedEmail = email.trim();
       const trimmedPassword = password.trim();
 
-      if (!trimmedEmail || !trimmedPassword) {
-        return {success: false, message: 'Email and password are required.'};
+      if (!trimmedName || !trimmedEmail || !trimmedPassword) {
+        return {success: false, message: 'Name, email, and password are required.'};
       }
 
       if (emailAlreadyRegistered(trimmedEmail)) {
@@ -57,8 +58,7 @@ export function AuthProvider({children}: {children: React.ReactNode}) {
         };
       }
 
-      registerUser(trimmedEmail, trimmedPassword);
-      setUser({email: trimmedEmail.toLowerCase()});
+      registerUser(trimmedName, trimmedEmail, trimmedPassword);
       return {success: true};
     },
     [],

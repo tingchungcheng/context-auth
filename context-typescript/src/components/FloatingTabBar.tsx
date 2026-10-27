@@ -2,11 +2,14 @@ import React from 'react';
 import {BottomTabBarProps} from '@react-navigation/bottom-tabs';
 import {Pressable, StyleSheet, Text, View} from 'react-native';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
+import {useAuth} from '../context/AuthContext';
 import {colors} from '../theme/colors';
+import {MainTabParamList} from '../navigation/types';
 
 export const FLOATING_TAB_BAR_HEIGHT = 56;
 
 export function FloatingTabBar({state, navigation}: BottomTabBarProps) {
+  const {user} = useAuth();
   const insets = useSafeAreaInsets();
   const bottomInset = Math.max(insets.bottom, 12);
 
@@ -20,6 +23,13 @@ export function FloatingTabBar({state, navigation}: BottomTabBarProps) {
           const label = route.name;
 
           const onPress = () => {
+            const routeName = route.name as keyof MainTabParamList;
+
+            if (routeName === 'Home' && !user) {
+              navigation.navigate('Login');
+              return;
+            }
+
             const event = navigation.emit({
               type: 'tabPress',
               target: route.key,
@@ -27,7 +37,7 @@ export function FloatingTabBar({state, navigation}: BottomTabBarProps) {
             });
 
             if (!isFocused && !event.defaultPrevented) {
-              navigation.navigate(route.name, route.params);
+              navigation.navigate(routeName);
             }
           };
 
@@ -63,7 +73,7 @@ const styles = StyleSheet.create({
   bar: {
     flexDirection: 'row',
     width: '100%',
-    maxWidth: 360,
+    maxWidth: 400,
     backgroundColor: colors.surface,
     borderRadius: 28,
     padding: 6,
@@ -86,7 +96,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
   },
   label: {
-    fontSize: 15,
+    fontSize: 13,
     fontWeight: '600',
     color: colors.textMuted,
   },

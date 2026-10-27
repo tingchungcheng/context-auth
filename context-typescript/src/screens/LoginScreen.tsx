@@ -12,27 +12,28 @@ import {AuthTextField} from '../components/AuthTextField';
 import {FLOATING_TAB_BAR_HEIGHT} from '../components/FloatingTabBar';
 import {PrimaryButton} from '../components/PrimaryButton';
 import {useAuth} from '../context/AuthContext';
+import {useToast} from '../context/ToastContext';
 import {colors} from '../theme/colors';
-import {AuthTabParamList} from '../navigation/types';
+import {MainTabParamList} from '../navigation/types';
 
-type Props = BottomTabScreenProps<AuthTabParamList, 'Login'>;
+type Props = BottomTabScreenProps<MainTabParamList, 'Login'>;
 
-export function LoginScreen(_props: Props) {
+export function LoginScreen({navigation}: Props) {
   const {login} = useAuth();
+  const {showToast} = useToast();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [formError, setFormError] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const handleLogin = () => {
-    setSuccessMessage(null);
     const result = login(email, password);
     if (!result.success) {
       setFormError(result.message ?? 'Unable to log in.');
       return;
     }
     setFormError(null);
-    setSuccessMessage('Logged in successfully. Home screen arrives in milestone B.');
+    showToast('Welcome back!');
+    navigation.navigate('Home');
   };
 
   return (
@@ -69,11 +70,6 @@ export function LoginScreen(_props: Props) {
         {formError ? (
           <View style={styles.bannerError}>
             <Text style={styles.bannerErrorText}>{formError}</Text>
-          </View>
-        ) : null}
-        {successMessage ? (
-          <View style={styles.bannerSuccess}>
-            <Text style={styles.bannerSuccessText}>{successMessage}</Text>
           </View>
         ) : null}
 
@@ -121,16 +117,6 @@ const styles = StyleSheet.create({
   },
   bannerErrorText: {
     color: colors.error,
-    fontSize: 14,
-  },
-  bannerSuccess: {
-    backgroundColor: '#ECFDF5',
-    borderRadius: 10,
-    padding: 12,
-    marginBottom: 8,
-  },
-  bannerSuccessText: {
-    color: '#047857',
     fontSize: 14,
   },
 });

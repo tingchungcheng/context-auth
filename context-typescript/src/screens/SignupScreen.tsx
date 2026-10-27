@@ -12,27 +12,30 @@ import {AuthTextField} from '../components/AuthTextField';
 import {FLOATING_TAB_BAR_HEIGHT} from '../components/FloatingTabBar';
 import {PrimaryButton} from '../components/PrimaryButton';
 import {useAuth} from '../context/AuthContext';
+import {useToast} from '../context/ToastContext';
 import {colors} from '../theme/colors';
-import {AuthTabParamList} from '../navigation/types';
+import {MainTabParamList} from '../navigation/types';
 
-type Props = BottomTabScreenProps<AuthTabParamList, 'Signup'>;
+type Props = BottomTabScreenProps<MainTabParamList, 'Signup'>;
 
-export function SignupScreen(_props: Props) {
+export function SignupScreen({navigation}: Props) {
   const {signup} = useAuth();
+  const {showToast} = useToast();
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [formError, setFormError] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const handleSignup = () => {
-    setSuccessMessage(null);
-    const result = signup(email, password);
+    const result = signup(name, email, password);
     if (!result.success) {
       setFormError(result.message ?? 'Unable to sign up.');
       return;
     }
     setFormError(null);
-    setSuccessMessage('Account created. Home screen arrives in milestone B.');
+    setPassword('');
+    showToast('Account created. Please sign in.');
+    navigation.navigate('Login');
   };
 
   return (
@@ -44,9 +47,17 @@ export function SignupScreen(_props: Props) {
         keyboardShouldPersistTaps="handled">
         <View style={styles.header}>
           <Text style={styles.title}>Create account</Text>
-          <Text style={styles.subtitle}>Start with email and password for milestone A.</Text>
+          <Text style={styles.subtitle}>Register, then sign in on the Login tab.</Text>
         </View>
 
+        <AuthTextField
+          label="Name"
+          value={name}
+          onChangeText={setName}
+          autoCapitalize="words"
+          textContentType="name"
+          placeholder="Your name"
+        />
         <AuthTextField
           label="Email"
           value={email}
@@ -69,11 +80,6 @@ export function SignupScreen(_props: Props) {
         {formError ? (
           <View style={styles.bannerError}>
             <Text style={styles.bannerErrorText}>{formError}</Text>
-          </View>
-        ) : null}
-        {successMessage ? (
-          <View style={styles.bannerSuccess}>
-            <Text style={styles.bannerSuccessText}>{successMessage}</Text>
           </View>
         ) : null}
 
@@ -121,16 +127,6 @@ const styles = StyleSheet.create({
   },
   bannerErrorText: {
     color: colors.error,
-    fontSize: 14,
-  },
-  bannerSuccess: {
-    backgroundColor: '#ECFDF5',
-    borderRadius: 10,
-    padding: 12,
-    marginBottom: 8,
-  },
-  bannerSuccessText: {
-    color: '#047857',
     fontSize: 14,
   },
 });
