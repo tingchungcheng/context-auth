@@ -1,4 +1,4 @@
-import React, {useCallback, useEffect, useMemo, useRef} from 'react';
+import React, {useCallback, useEffect, useRef} from 'react';
 import {BottomTabBarProps} from '@react-navigation/bottom-tabs';
 import {
   Animated,
@@ -18,10 +18,10 @@ type TabItemProps = {
   label: string;
   isFocused: boolean;
   onPress: () => void;
-  disabled?: boolean;
+  locked?: boolean;
 };
 
-function FloatingTabItem({label, isFocused, onPress, disabled}: TabItemProps) {
+function FloatingTabItem({label, isFocused, onPress, locked}: TabItemProps) {
   const scale = useRef(new Animated.Value(1)).current;
 
   const springTo = useCallback(
@@ -55,28 +55,36 @@ function FloatingTabItem({label, isFocused, onPress, disabled}: TabItemProps) {
     }
   }, [isFocused, scale]);
 
+  const handlePress = () => {
+    if (locked) {
+      springTo(0.94, 2);
+      springTo(1);
+      return;
+    }
+    onPress();
+  };
+
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityState={{selected: isFocused, disabled: disabled ?? false}}
+      accessibilityState={{selected: isFocused, disabled: locked ?? false}}
       accessibilityLabel={label}
-      disabled={disabled}
-      onPress={onPress}
-      onPressIn={() => !disabled && springTo(0.88, 4)}
-      onPressOut={() => !disabled && springTo(1)}
-      style={[styles.tabPressable, disabled ? styles.tabPressableDisabled : undefined]}>
+      onPress={handlePress}
+      onPressIn={() => springTo(locked ? 0.94 : 0.88, 4)}
+      onPressOut={() => springTo(1)}
+      style={[styles.tabPressable, locked ? styles.tabPressableLocked : undefined]}>
       <Animated.View
         style={[
           styles.tab,
           isFocused ? styles.tabActive : undefined,
-          disabled ? styles.tabDisabled : undefined,
+          locked && !isFocused ? styles.tabLocked : undefined,
           {transform: [{scale}]},
         ]}>
         <Text
           style={[
             styles.label,
             isFocused ? styles.labelActive : undefined,
-            disabled ? styles.labelDisabled : undefined,
+            locked && !isFocused ? styles.labelLocked : undefined,
           ]}>
           {label}
         </Text>
@@ -90,37 +98,19 @@ export function FloatingTabBar({state, navigation}: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
   const bottomInset = Math.max(insets.bottom, 12);
 
-  const visibleRoutes = useMemo(() => {
-    if (user) {
-      return state.routes.filter(route => route.name === 'Home');
-    }
-    return state.routes;
-  }, [state.routes, user]);
-
-  useEffect(() => {
-    if (!user) {
-      return;
-    }
-    const currentRoute = state.routes[state.index]?.name;
-    if (currentRoute === 'Login' || currentRoute === 'Signup') {
-      navigation.navigate('Home');
-    }
-  }, [navigation, state.index, state.routes, user]);
-
   return (
     <View
       pointerEvents="box-none"
       style={[styles.outer, {paddingBottom: bottomInset}]}>
-      <View style={[styles.bar, user ? styles.barSingle : undefined]}>
-        {visibleRoutes.map(route => {
-          const index = state.routes.findIndex(r => r.key === route.key);
+      <View style={styles.bar}>
+        {state.routes.map((route, index) => {
           const isFocused = state.index === index;
           const label = route.name;
+          const routeName = route.name as keyof MainTabParamList;
+          const locked = Boolean(user && routeName !== 'Home');
 
           const onPress = () => {
-            const routeName = route.name as keyof MainTabParamList;
-
-            if (user && routeName !== 'Home') {
+            if (locked) {
               return;
             }
 
@@ -145,6 +135,7 @@ export function FloatingTabBar({state, navigation}: BottomTabBarProps) {
               key={route.key}
               label={label}
               isFocused={isFocused}
+              locked={locked}
               onPress={onPress}
             />
           );
@@ -178,14 +169,11 @@ const styles = StyleSheet.create({
     shadowRadius: 16,
     elevation: 8,
   },
-  barSingle: {
-    maxWidth: 200,
-  },
   tabPressable: {
     flex: 1,
   },
-  tabPressableDisabled: {
-    opacity: 0.45,
+  tabPressableLocked: {
+    opacity: 0.55,
   },
   tab: {
     paddingVertical: 12,
@@ -196,8 +184,8 @@ const styles = StyleSheet.create({
   tabActive: {
     backgroundColor: colors.primary,
   },
-  tabDisabled: {
-    backgroundColor: '#E2E8F0',
+  tabLocked: {
+    backgroundColor: '#F1F5F9',
   },
   label: {
     fontSize: 13,
@@ -207,7 +195,7 @@ const styles = StyleSheet.create({
   labelActive: {
     color: '#FFFFFF',
   },
-  labelDisabled: {
+  labelLocked: {
     color: '#94A3B8',
   },
 });

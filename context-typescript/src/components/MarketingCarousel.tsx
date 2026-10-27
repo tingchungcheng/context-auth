@@ -1,17 +1,19 @@
-import React, {useEffect, useRef} from 'react';
+import React, {useCallback, useEffect, useRef} from 'react';
 import {
-  Animated,
   Dimensions,
-  Easing,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
+  ScrollView,
   StyleSheet,
   View,
 } from 'react-native';
-const SLIDE_COUNT = 4;
+
 const HORIZONTAL_PADDING = 24;
 const SLIDE_GAP = 12;
 const SCREEN_WIDTH = Dimensions.get('window').width;
 const SLIDE_WIDTH = SCREEN_WIDTH - HORIZONTAL_PADDING * 2;
-const LOOP_WIDTH = SLIDE_COUNT * (SLIDE_WIDTH + SLIDE_GAP);
+const SNAP_INTERVAL = SLIDE_WIDTH + SLIDE_GAP;
+const AUTO_ADVANCE_MS = 4000;
 
 const SLIDE_PALETTES = [
   ['#DBEAFE', '#EFF6FF'],
@@ -21,48 +23,103 @@ const SLIDE_PALETTES = [
 ];
 
 export function MarketingCarousel() {
-  const translateX = useRef(new Animated.Value(0)).current;
+  const scrollRef = useRef<ScrollView>(null);
+  const activeIndex = useRef(0);
+  const isDragging = useRef(false);
+  const resumeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const autoTimer = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const scrollToIndex = useCallback((index: number, animated: boolean) => {
+    scrollRef.current?.scrollTo({
+      x: index * SNAP_INTERVAL,
+      animated,
+    });
+    activeIndex.current = index;
+  }, []);
+
+  const startAutoAdvance = useCallback(() => {
+    if (autoTimer.current) {
+      clearInterval(autoTimer.current);
+    }
+    autoTimer.current = setInterval(() => {
+      if (isDragging.current) {
+        return;
+      }
+      const next = (activeIndex.current + 1) % SLIDE_PALETTES.length;
+      scrollToIndex(next, true);
+    }, AUTO_ADVANCE_MS);
+  }, [scrollToIndex]);
 
   useEffect(() => {
-    const animation = Animated.loop(
-      Animated.timing(translateX, {
-        toValue: -LOOP_WIDTH,
-        duration: 16000,
-        easing: Easing.linear,
-        useNativeDriver: true,
-      }),
-    );
-    animation.start();
-    return () => animation.stop();
-  }, [translateX]);
+    startAutoAdvance();
+    return () => {
+      if (autoTimer.current) {
+        clearInterval(autoTimer.current);
+      }
+      if (resumeTimer.current) {
+        clearTimeout(resumeTimer.current);
+      }
+    };
+  }, [startAutoAdvance]);
 
-  const slides = [...SLIDE_PALETTES, ...SLIDE_PALETTES];
+  const pauseAutoAdvance = () => {
+    isDragging.current = true;
+    if (autoTimer.current) {
+      clearInterval(autoTimer.current);
+      autoTimer.current = null;
+    }
+    if (resumeTimer.current) {
+      clearTimeout(resumeTimer.current);
+    }
+  };
+
+  const scheduleAutoAdvance = () => {
+    if (resumeTimer.current) {
+      clearTimeout(resumeTimer.current);
+    }
+    resumeTimer.current = setTimeout(() => {
+      isDragging.current = false;
+      startAutoAdvance();
+    }, 2500);
+  };
+
+  const handleScrollEnd = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const offsetX = event.nativeEvent.contentOffset.x;
+    const index = Math.round(offsetX / SNAP_INTERVAL);
+    const clamped = Math.max(0, Math.min(index, SLIDE_PALETTES.length - 1));
+    activeIndex.current = clamped;
+  };
 
   return (
     <View style={styles.viewport}>
-      <Animated.View
-        style={[
-          styles.track,
-          {
-            width: slides.length * (SLIDE_WIDTH + SLIDE_GAP),
-            transform: [{translateX}],
-          },
-        ]}>
-        {slides.map((palette, index) => (
+      <ScrollView
+        ref={scrollRef}
+        horizontal
+        decelerationRate="fast"
+        snapToInterval={SNAP_INTERVAL}
+        snapToAlignment="start"
+        disableIntervalMomentum
+        showsHorizontalScrollIndicator={false}
+        scrollEventThrottle={16}
+        contentContainerStyle={styles.track}
+        onScrollBeginDrag={pauseAutoAdvance}
+        onScrollEndDrag={scheduleAutoAdvance}
+        onMomentumScrollEnd={event => {
+          handleScrollEnd(event);
+          scheduleAutoAdvance();
+        }}>
+        {SLIDE_PALETTES.map((palette, index) => (
           <View
             key={`slide-${index}`}
             style={[
               styles.slide,
-              {
-                width: SLIDE_WIDTH,
-                marginRight: SLIDE_GAP,
-                backgroundColor: palette[0],
-                borderColor: palette[1],
-              },
+              styles.slideSized,
+              index < SLIDE_PALETTES.length - 1 ? styles.slideGap : undefined,
+              {backgroundColor: palette[0], borderColor: palette[1]},
             ]}
           />
         ))}
-      </Animated.View>
+      </ScrollView>
     </View>
   );
 }
@@ -71,15 +128,19 @@ const styles = StyleSheet.create({
   viewport: {
     overflow: 'hidden',
     marginHorizontal: -HORIZONTAL_PADDING,
-    paddingHorizontal: HORIZONTAL_PADDING,
   },
   track: {
-    flexDirection: 'row',
+    paddingHorizontal: HORIZONTAL_PADDING,
   },
   slide: {
     height: 168,
     borderRadius: 20,
     borderWidth: 1,
-    opacity: 0.95,
+  },
+  slideSized: {
+    width: SLIDE_WIDTH,
+  },
+  slideGap: {
+    marginRight: SLIDE_GAP,
   },
 });
