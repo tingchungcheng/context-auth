@@ -235,18 +235,36 @@ Guest taps Home:
   Redirected to Login tab
 
 
-11. WHAT IS NOT IMPLEMENTED YET (MILESTONE D)
----------------------------------------------
+11. PERSISTENCE (MILESTONE D — AsyncStorage)
+--------------------------------------------
 
-  - AsyncStorage (or similar) to persist user after app close
-  - On launch: read stored session, setUser, skip Login
-  - On logout: clear storage
+Files:
+  src/services/authStorage.ts   — read/write session + user registry JSON
+  src/services/authStore.ts     — hydrateUserRegistry on launch; persist on signup
 
-  - Real API / JWT / secure password hashing
+Keys:
+  @context-auth/session         — { name, email } when logged in (no password)
+  @context-auth/users           — array of { name, email, password } demo accounts
+
+Flow on cold start:
+  1. AuthProvider mounts, isAuthReady = false (AuthLoadingGate shows spinner)
+  2. hydrateUserRegistry() fills in-memory Map from disk
+  3. loadSession() -> setUser if present
+  4. isAuthReady = true
+  5. AuthBootstrap navigates to Home if user != null
+
+Login:  setUser + saveSession()
+Logout: setUser(null) + clearSession() — session key removed; registry kept
+Signup: registerUser() + saveUserRegistry() — does not save session until login
+
+12. NOT IN SCOPE (PRODUCTION)
+-----------------------------
+
+  - Real API / JWT / secure password hashing (passwords in AsyncStorage are demo-only)
   - Separate auth stack vs app stack (optional refactor)
 
 
-12. HOW TO EXTEND FOR LEARNING
+13. HOW TO EXTEND FOR LEARNING
 ------------------------------
 
   - Add a fourth context value isLoading if you add network calls

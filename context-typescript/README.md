@@ -11,7 +11,7 @@ React Native CLI app for the User Authentication assignment. State is managed wi
 | **A** | Login & Signup (email + password), AuthContext, floating bottom tabs | Done |
 | **B** | Home (name + email), logout, Home tab + guest → Login | Done |
 | **C** | Email/password validation rules, popup modals | Done |
-| **D** | AsyncStorage session persistence | Planned |
+| **D** | AsyncStorage session persistence | Done |
 
 ### Milestone A — Auth screens & context
 
@@ -38,10 +38,12 @@ React Native CLI app for the User Authentication assignment. State is managed wi
 - **Password visibility toggle** (Feather eye / eye-off icons) on Login and Signup
 - Validators live in `src/utils/validation.ts`; modals via `ModalContext`
 
-### Milestone D — Persist session (planned)
+### Milestone D — Persist session
 
-- **AsyncStorage** so the user stays signed in after app restart
-- Restore `user` on launch; clear storage on logout
+- **AsyncStorage** keys: `@context-auth/session` (logged-in user), `@context-auth/users` (demo accounts)
+- On launch: load registry + session → **`isAuthReady`** gate → auto-navigate **Home** if session exists
+- **Login** saves session; **logout** calls `removeItem` on session (accounts remain for re-login)
+- **Signup** persists accounts so login still works after killing the app
 
 ## Prerequisites
 

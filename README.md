@@ -6,7 +6,7 @@ User Authentication assignment implementations for React Native (CLI).
 
 | Folder | Stack | Status |
 |--------|--------|--------|
-| [`context-typescript/`](context-typescript/) | TypeScript + Context API + React Navigation | Milestone B |
+| [`context-typescript/`](context-typescript/) | TypeScript + Context API + React Navigation | Milestone D |
 | [`redux-javascript/`](redux-javascript/) | JavaScript + Redux (planned) | Not started |
 
 Assignment spec: [`requirements.txt`](requirements.txt)

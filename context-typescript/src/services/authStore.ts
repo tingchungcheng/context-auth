@@ -1,3 +1,5 @@
+import {loadUserRegistry, saveUserRegistry} from './authStorage';
+
 type StoredUser = {
   name: string;
   email: string;
@@ -5,6 +7,23 @@ type StoredUser = {
 };
 
 const users = new Map<string, StoredUser>();
+
+async function persistUsers(): Promise<void> {
+  const list = Array.from(users.values());
+  await saveUserRegistry(list);
+}
+
+export async function hydrateUserRegistry(): Promise<void> {
+  const list = await loadUserRegistry();
+  users.clear();
+  for (const entry of list) {
+    users.set(entry.email.toLowerCase(), {
+      name: entry.name,
+      email: entry.email.toLowerCase(),
+      password: entry.password,
+    });
+  }
+}
 
 export function registerUser(
   name: string,
@@ -16,6 +35,7 @@ export function registerUser(
     email: email.toLowerCase(),
     password,
   });
+  persistUsers().catch(() => {});
 }
 
 export function findUser(email: string): StoredUser | undefined {

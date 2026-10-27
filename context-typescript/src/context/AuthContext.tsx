@@ -2,11 +2,18 @@ import React, {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useState,
 } from 'react';
 import {
+  clearSession,
+  loadSession,
+  saveSession,
+} from '../services/authStorage';
+import {
   emailAlreadyRegistered,
+  hydrateUserRegistry,
   registerUser,
   verifyCredentials,
 } from '../services/authStore';
@@ -15,6 +22,7 @@ import {validateLoginForm, validateSignupForm} from '../utils/validation';
 
 type AuthContextValue = {
   user: AuthUser | null;
+  isAuthReady: boolean;
   login: (email: string, password: string) => AuthActionResult;
   signup: (name: string, email: string, password: string) => AuthActionResult;
   logout: () => void;
@@ -24,6 +32,29 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 export function AuthProvider({children}: {children: React.ReactNode}) {
   const [user, setUser] = useState<AuthUser | null>(null);
+  const [isAuthReady, setIsAuthReady] = useState(false);
+
+  useEffect(() => {
+    let mounted = true;
+
+    (async () => {
+      try {
+        await hydrateUserRegistry();
+        const session = await loadSession();
+        if (mounted && session) {
+          setUser(session);
+        }
+      } finally {
+        if (mounted) {
+          setIsAuthReady(true);
+        }
+      }
+    })();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const login = useCallback((email: string, password: string): AuthActionResult => {
     const validation = validateLoginForm(email, password);
@@ -42,7 +73,9 @@ export function AuthProvider({children}: {children: React.ReactNode}) {
       };
     }
 
-    setUser({name: match.name, email: match.email});
+    const nextUser = {name: match.name, email: match.email};
+    setUser(nextUser);
+    saveSession(nextUser).catch(() => {});
     return {success: true};
   }, []);
 
@@ -73,11 +106,12 @@ export function AuthProvider({children}: {children: React.ReactNode}) {
 
   const logout = useCallback(() => {
     setUser(null);
+    clearSession().catch(() => {});
   }, []);
 
   const value = useMemo(
-    () => ({user, login, signup, logout}),
-    [user, login, signup, logout],
+    () => ({user, isAuthReady, login, signup, logout}),
+    [user, isAuthReady, login, signup, logout],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
