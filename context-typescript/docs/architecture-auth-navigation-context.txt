@@ -251,7 +251,7 @@ Flow on cold start:
   2. hydrateUserRegistry() fills in-memory Map from disk
   3. loadSession() -> setUser if present
   4. isAuthReady = true
-  5. AuthBootstrap navigates to Home if user != null
+  5. AppNavigation (navigationRef + onReady) navigates to Home if user != null
 
 Login:  setUser + saveSession()
 Logout: setUser(null) + clearSession() — session key removed; registry kept

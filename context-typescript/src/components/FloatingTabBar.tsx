@@ -1,17 +1,11 @@
-import React, {useCallback, useEffect, useRef} from 'react';
-import {BottomTabBarProps} from '@react-navigation/bottom-tabs';
-import {
-  Animated,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
-import {useSafeAreaInsets} from 'react-native-safe-area-context';
-import {useAuth} from '../context/AuthContext';
-import {useToast} from '../context/ToastContext';
-import {colors} from '../theme/colors';
-import {MainTabParamList} from '../navigation/types';
+import React, { useCallback, useEffect, useRef } from 'react';
+import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
+import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
+import { colors } from '../theme/colors';
+import { MainTabParamList } from '../navigation/types';
 
 export const FLOATING_TAB_BAR_HEIGHT = 56;
 
@@ -22,7 +16,7 @@ type TabItemProps = {
   locked?: boolean;
 };
 
-function FloatingTabItem({label, isFocused, onPress, locked}: TabItemProps) {
+function FloatingTabItem({ label, isFocused, onPress, locked }: TabItemProps) {
   const scale = useRef(new Animated.Value(1)).current;
 
   const springTo = useCallback(
@@ -67,25 +61,31 @@ function FloatingTabItem({label, isFocused, onPress, locked}: TabItemProps) {
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityState={{selected: isFocused, disabled: locked ?? false}}
+      accessibilityState={{ selected: isFocused, disabled: locked ?? false }}
       accessibilityLabel={label}
       onPress={handlePress}
       onPressIn={() => springTo(locked ? 0.94 : 0.88, 4)}
       onPressOut={() => springTo(1)}
-      style={[styles.tabPressable, locked ? styles.tabPressableLocked : undefined]}>
+      style={[
+        styles.tabPressable,
+        locked ? styles.tabPressableLocked : undefined,
+      ]}
+    >
       <Animated.View
         style={[
           styles.tab,
           isFocused ? styles.tabActive : undefined,
           locked && !isFocused ? styles.tabLocked : undefined,
-          {transform: [{scale}]},
-        ]}>
+          { transform: [{ scale }] },
+        ]}
+      >
         <Text
           style={[
             styles.label,
             isFocused ? styles.labelActive : undefined,
             locked && !isFocused ? styles.labelLocked : undefined,
-          ]}>
+          ]}
+        >
           {label}
         </Text>
       </Animated.View>
@@ -93,16 +93,17 @@ function FloatingTabItem({label, isFocused, onPress, locked}: TabItemProps) {
   );
 }
 
-export function FloatingTabBar({state, navigation}: BottomTabBarProps) {
-  const {user} = useAuth();
-  const {showToast} = useToast();
+export function FloatingTabBar({ state, navigation }: BottomTabBarProps) {
+  const { user } = useAuth();
+  const { showToast } = useToast();
   const insets = useSafeAreaInsets();
   const bottomInset = Math.max(insets.bottom, 12);
 
   return (
     <View
       pointerEvents="box-none"
-      style={[styles.outer, {paddingBottom: bottomInset}]}>
+      style={[styles.outer, { paddingBottom: bottomInset }]}
+    >
       <View style={styles.bar}>
         {state.routes.map((route, index) => {
           const isFocused = state.index === index;
@@ -112,7 +113,7 @@ export function FloatingTabBar({state, navigation}: BottomTabBarProps) {
 
           const onPress = () => {
             if (locked) {
-              showToast('You are signed in. Use Home or log out first.');
+              showToast('You are signed in.');
               return;
             }
 
@@ -167,7 +168,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     shadowColor: '#0F172A',
-    shadowOffset: {width: 0, height: 8},
+    shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.12,
     shadowRadius: 16,
     elevation: 8,
