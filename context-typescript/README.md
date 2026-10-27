@@ -65,6 +65,9 @@ npx react-devtools
 Select **`AuthProvider`** → **hooks** → find `user` (`null` or `{ name, email }`).  
 See **`docs/architecture-auth-navigation-context.txt` §11** for Context vs Redux logging.
 
+**AsyncStorage (dev builds only):** watch the Metro terminal for lines prefixed with  
+`[context-auth/storage]` on app launch, login, logout, and signup (passwords are not logged).
+
 ## Commits
 
 Repo convention: **`Feature:`** / **`Fix:`** / **`Misc:`** — see root [README](../README.md#commit-messages).
