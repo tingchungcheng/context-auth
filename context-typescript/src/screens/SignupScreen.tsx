@@ -1,5 +1,5 @@
-import React, {useCallback, useState} from 'react';
-import {useFocusEffect} from '@react-navigation/native';
+import React, { useCallback, useState } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -8,23 +8,23 @@ import {
   Text,
   View,
 } from 'react-native';
-import {BottomTabScreenProps} from '@react-navigation/bottom-tabs';
-import {AuthTextField} from '../components/AuthTextField';
-import {FLOATING_TAB_BAR_HEIGHT} from '../components/FloatingTabBar';
-import {PrimaryButton} from '../components/PrimaryButton';
-import {useAuth} from '../context/AuthContext';
-import {useModal} from '../context/ModalContext';
-import {useToast} from '../context/ToastContext';
-import {colors} from '../theme/colors';
-import {MainTabParamList} from '../navigation/types';
+import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
+import { AuthTextField } from '../components/AuthTextField';
+import { FLOATING_TAB_BAR_HEIGHT } from '../components/FloatingTabBar';
+import { PrimaryButton } from '../components/PrimaryButton';
+import { useAuth } from '../context/AuthContext';
+import { useModal } from '../context/ModalContext';
+import { useToast } from '../context/ToastContext';
+import { colors } from '../theme/colors';
+import { MainTabParamList } from '../navigation/types';
 
 type Props = BottomTabScreenProps<MainTabParamList, 'Signup'>;
 type FieldKey = 'name' | 'email' | 'password';
 
-export function SignupScreen({navigation}: Props) {
-  const {signup, user} = useAuth();
-  const {showToast} = useToast();
-  const {showModal} = useModal();
+export function SignupScreen({ navigation }: Props) {
+  const { signup, user } = useAuth();
+  const { showToast } = useToast();
+  const { showModal } = useModal();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -41,7 +41,7 @@ export function SignupScreen({navigation}: Props) {
   );
 
   const clearFieldError = (field: FieldKey) => {
-    setFieldErrors(prev => ({...prev, [field]: false}));
+    setFieldErrors(prev => ({ ...prev, [field]: false }));
   };
 
   const handleSignup = () => {
@@ -49,7 +49,7 @@ export function SignupScreen({navigation}: Props) {
     const result = signup(name, email, password);
     if (!result.success) {
       if (result.field) {
-        setFieldErrors({[result.field]: true});
+        setFieldErrors({ [result.field]: true });
       }
       showModal({
         title: 'Unable to sign up',
@@ -65,13 +65,17 @@ export function SignupScreen({navigation}: Props) {
   return (
     <KeyboardAvoidingView
       style={styles.flex}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
       <ScrollView
         contentContainerStyle={styles.container}
-        keyboardShouldPersistTaps="handled">
+        keyboardShouldPersistTaps="handled"
+      >
         <View style={styles.header}>
           <Text style={styles.title}>Create account</Text>
-          <Text style={styles.subtitle}>Register, then sign in on the Login tab.</Text>
+          <Text style={styles.subtitle}>
+            Register, then sign in on the Login tab.
+          </Text>
         </View>
 
         <AuthTextField
@@ -113,7 +117,17 @@ export function SignupScreen({navigation}: Props) {
           placeholder="At least 6 characters"
         />
 
-        <PrimaryButton label="Signup" onPress={handleSignup} style={styles.primaryAction} />
+        <PrimaryButton
+          label="Signup"
+          onPress={handleSignup}
+          style={styles.primaryAction}
+        />
+        <PrimaryButton
+          label="Go to Login"
+          variant="outline"
+          onPress={() => navigation.navigate('Login')}
+          style={styles.primaryAction2}
+        />
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -148,5 +162,9 @@ const styles = StyleSheet.create({
   primaryAction: {
     marginBottom: 12,
     marginTop: 8,
+  },
+
+  primaryAction2: {
+    marginBottom: 12,
   },
 });
