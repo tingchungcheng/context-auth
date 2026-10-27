@@ -1,0 +1,67 @@
+User Authentication App
+
+Objective:
+Create a React Native app with Login and Signup functionality using React Context API to
+manage the authentication state. This assignment will test your understanding of authentication
+flows, state management using Context API, form handling, and navigation.
+
+Requirements
+1. Authentication Context Setup
+Implement a AuthContext using React's Context API to manage the global
+authentication state.
+The context should include:
+login: A function to log in a user.
+signup: A function to create a new user.
+logout: A function to log out the user.
+
+user: State to store the currently logged-in user's information.
+
+2. Screens
+1. Login Screen:
+o Include input fields for:
+▪ Email
+▪ Password
+o A "Login" button that triggers the login function from the AuthContext.
+o Show error messages for:
+▪ Invalid email/password format.
+▪ Incorrect credentials.
+o A "Go to Signup" button to navigate to the Signup screen.
+
+2. Signup Screen:
+o Include input fields for:
+▪ Name
+▪ Email
+▪ Password
+o A "Signup" button that triggers the signup function from the AuthContext.
+o Show error messages for:
+▪ Missing fields.
+▪ Invalid email format.
+▪ Password length less than 6 characters.
+o A "Go to Login" button to navigate back to the Login screen.
+
+3. Home Screen:
+o Display the currently logged-in user's name and email.
+o A "Logout" button to log out the user and return to the Login scree
+
+3. Persist Authentication (optional)
+• Use AsyncStorage to persist the authentication state so that the user remains logged in
+after the app is closed and reopened.
+
+4. Navigation
+• Use React Navigation to manage navigation between:
+o Login Screen
+o Signup Screen
+o Home Screen
+
+5. UI Design
+• Make the app visually appealing with clear layouts and intuitive navigation.
+• Use appropriate styles for input fields, buttons, and error messages.
+
+Bonus Tasks (Optional)
+1. Password Visibility Toggle:
+o Add an eye icon to toggle the visibility of the password field.
+
+Share the assignment with the below details:
+1. A GitHub repository with the project code.
+2. A README.md file with setup instructions and an explanation of implemented features.
+3. Screenshots or a short video demonstrating the app's functionality.
