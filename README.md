@@ -11,6 +11,9 @@ User Authentication assignment implementations for React Native (CLI).
 
 Assignment spec: [`requirements.txt`](requirements.txt)
 
+**How this app works (Context + navigation + AsyncStorage):**  
+[`context-typescript/docs/architecture-auth-navigation-context.txt`](context-typescript/docs/architecture-auth-navigation-context.txt)
+
 ## Node version
 
 React Native **0.88** does not support **Node 23**. Use **22.13+**, **24.3+**, or **26+**:
@@ -45,12 +48,8 @@ Remote: `git@github.com:tingchungcheng/context-auth.git`
 
 ## Milestone plan (TypeScript variant)
 
-- **A** — Login & Signup (email + password)
-- **B** — Home screen + logout + auth/app stacks
-- **C** — Validators + modal feedback
-- **D** — AsyncStorage session
-
-Each milestone is committed and pushed to `main` when complete.
+All milestones **A–D** are implemented in `context-typescript/`.  
+See [`context-typescript/README.md`](context-typescript/README.md) for behaviour and run steps.
 
 ## Commit messages
 

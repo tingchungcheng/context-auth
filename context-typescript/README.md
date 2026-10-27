@@ -1,88 +1,70 @@
 # Context Auth (TypeScript + Context API)
 
-React Native CLI app for the User Authentication assignment. State is managed with React Context API.
+React Native CLI app for the User Authentication assignment. Global auth state uses **React Context API** (not Redux).
 
-**Architecture notes (navigation, Context API, auth):** [`docs/architecture-auth-navigation-context.txt`](docs/architecture-auth-navigation-context.txt)
+**Full walkthrough (navigation, session vs accounts, debugging):**  
+[`docs/architecture-auth-navigation-context.txt`](docs/architecture-auth-navigation-context.txt)
 
-## Milestones
+## Milestones (all done)
 
-| Milestone | Scope | Status |
-|-----------|--------|--------|
-| **A** | Login & Signup (email + password), AuthContext, floating bottom tabs | Done |
-| **B** | Home (name + email), logout, Home tab + guest → Login | Done |
-| **C** | Email/password validation rules, popup modals | Done |
-| **D** | AsyncStorage session persistence | Done |
+| Milestone | Scope |
+|-----------|--------|
+| **A** | Login & Signup, AuthContext, floating tabs |
+| **B** | Home, logout, tab rules for guest / signed-in |
+| **C** | Validation, error modals, password visibility icons |
+| **D** | AsyncStorage session + saved demo accounts |
 
-### Milestone A — Auth screens & context
+## Quick mental model
 
-- **Login** and **Signup** with email and password
-- **AuthContext**: `login`, `signup`, `logout`, `user`
-- In-memory user store (clears when the app process restarts)
-- **Floating bottom tab bar**: Login | Signup (active tab highlighted)
+| What | Where | Logout | Kill app |
+|------|--------|--------|----------|
+| **Session** (logged-in user) | Context `user` + `@context-auth/session` | Cleared | Restored if you were logged in |
+| **Accounts** (signup data) | `authStore` + `@context-auth/users` | Kept | Kept — you can log in again |
+| **Form inputs** | Each screen’s `useState` | Not auto-cleared | Lost with process |
 
-### Milestone B — Home & guest access
+Password is **never** stored in Context or session — only in the demo account registry.
 
-- **Signup** collects **name**, email, and password; does **not** log the user in
-- After signup: **toast** (“Account created. Please sign in.”) and switch to **Login**
-- **Home** tab on the same floating bar: **Login | Signup | Home**
-- **Guest** (not signed in) tapping **Home** → **Login** tab
-- After **login** → **Home** with name and email; **Logout** returns to **Login**
-- While signed in, **Login** / **Signup** stay visible but **do not navigate** (locked); **Home** stays active
-- **Home** mock marketing UI: promo banner, typography hero, looping empty carousel, account card + logout
+## Behaviour highlights
 
-### Milestone C — Validation & modals
-
-- **Login**: invalid email format, password rules (required, min 6 chars), wrong credentials → **modal**
-- **Signup**: missing name/email/password, invalid email, password &lt; 6, duplicate email → **modal**
-- Invalid fields get a **red border**; message is shown in the popup (not inline banners)
-- **Password visibility toggle** (Feather eye / eye-off icons) on Login and Signup
-- Validators live in `src/utils/validation.ts`; modals via `ModalContext`
-
-### Milestone D — Persist session
-
-- **AsyncStorage** keys: `@context-auth/session` (logged-in user), `@context-auth/users` (demo accounts)
-- On launch: load registry + session → **`isAuthReady`** gate → auto-navigate **Home** if session exists
-- **Login** saves session; **logout** calls `removeItem` on session (accounts remain for re-login)
-- **Signup** persists accounts so login still works after killing the app
-- Uses **`@react-native-async-storage/async-storage@2.x`** (v3 needs a full native rebuild). After adding/updating it, run **`cd ios && pod install`** then **`yarn ios`** (not only Metro reload).
+- **Signup** → toast → **Login** tab (not auto signed-in).
+- **Login** → toast → **Home**; session written to AsyncStorage.
+- **Guest** taps **Home** → toast → **Login**.
+- **Signed-in** taps **Login** / **Signup** → toast, stay on **Home** (tabs visible but locked).
+- **Cold start** with saved session → loading spinner → **Home** (`AppNavigation` + `navigationRef`, not early `useNavigation`).
 
 ## Prerequisites
 
-- Node.js **22.13+**, **24.3+**, or **26+** (not Node 23) — `nvm use` in this folder
-- Xcode (iOS) and/or Android Studio (Android)
-- CocoaPods for iOS: `cd ios && bundle exec pod install` (or `pod install`)
+- Node **22.13+**, **24.3+**, or **26+** (not Node 23) — `nvm use`
+- Xcode / Android Studio, CocoaPods for iOS
 
 ## Run
 
-From the **repo root**, install dependencies once:
+From repo root: `./prepmodules`
 
 ```bash
-./prepmodules
+cd context-typescript
+yarn start --reset-cache          # terminal 1
+yarn ios --simulator "LifeRPG iPhone 17 Pro"   # terminal 2
 ```
 
-Or only this app:
+After changing **native** deps (e.g. AsyncStorage, vector icons):
 
 ```bash
-yarn install
 cd ios && pod install && cd ..
+yarn ios
 ```
 
-**Terminal 1 — Metro (fresh cache after native/deps changes):**
+Metro reload (**⌘R**) is not enough for new native modules.
+
+## Debugging (no Redux DevTools)
 
 ```bash
-yarn start --reset-cache
+npx react-devtools
 ```
 
-**Terminal 2 — run on device/simulator:**
-
-```bash
-yarn ios --simulator "LifeRPG iPhone 17 Pro"
-# or
-yarn android
-```
-
-npm works too: `npm install`, `npm start -- --reset-cache`, `npm run ios`.
+Select **`AuthProvider`** → **hooks** → find `user` (`null` or `{ name, email }`).  
+See **`docs/architecture-auth-navigation-context.txt` §11** for Context vs Redux logging.
 
 ## Commits
 
-Follow the repo convention: **`Feature:`**, **`Fix:`**, or **`Misc:`** + summary (see root [README](../README.md#commit-messages)).
+Repo convention: **`Feature:`** / **`Fix:`** / **`Misc:`** — see root [README](../README.md#commit-messages).
