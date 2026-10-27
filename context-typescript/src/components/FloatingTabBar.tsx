@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {useAuth} from '../context/AuthContext';
+import {useToast} from '../context/ToastContext';
 import {colors} from '../theme/colors';
 import {MainTabParamList} from '../navigation/types';
 
@@ -59,7 +60,6 @@ function FloatingTabItem({label, isFocused, onPress, locked}: TabItemProps) {
     if (locked) {
       springTo(0.94, 2);
       springTo(1);
-      return;
     }
     onPress();
   };
@@ -95,6 +95,7 @@ function FloatingTabItem({label, isFocused, onPress, locked}: TabItemProps) {
 
 export function FloatingTabBar({state, navigation}: BottomTabBarProps) {
   const {user} = useAuth();
+  const {showToast} = useToast();
   const insets = useSafeAreaInsets();
   const bottomInset = Math.max(insets.bottom, 12);
 
@@ -111,10 +112,12 @@ export function FloatingTabBar({state, navigation}: BottomTabBarProps) {
 
           const onPress = () => {
             if (locked) {
+              showToast('You are signed in. Use Home or log out first.');
               return;
             }
 
             if (routeName === 'Home' && !user) {
+              showToast('Please sign in to access Home.');
               navigation.navigate('Login');
               return;
             }
